@@ -97,6 +97,7 @@ def forward_checking(csp, var, value, assignment, removals):
                 for i in range(len(csp.con_list)):
                     if int(csp.con_list[i][0][0]) == int(var) and int(csp.con_list[i][0][1]) == int(B) or \
                     int(csp.con_list[i][0][0]) == int(B) and int(csp.con_list[i][0][1]) == int(var):
+                        
                         csp.con_list[i] = list(csp.con_list[i])
                         csp.con_list[i][1] += 1
                         csp.con_list[i] = tuple(csp.con_list[i])
