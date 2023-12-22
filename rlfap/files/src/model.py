@@ -1,27 +1,15 @@
 from csp import *
 import linecache 
 
-
-"""     variables: A list of variables; each is atomic (e.g. int or string).
-        domains: A dict of {var:[possible_value, ...]} entries.
-
-        neighbors: A dict of {var:[var,...]} that for each variable lists
-                    the other variables that participate in constraints.
-
-        constraints A function f(A, a, B, b) that returns true if neighbors
-                    A, B satisfy the constraint when they have values A=a, B=b"""
-
-
-
-# print([x.split() for x in open('../texts/var11.txt').readlines()])        
+    
 
 class Model():
     def __init__(self):
         self.score = 0
 
     def info_ret():
-        vartxt = open('../texts/var11.txt', 'r')
-        ctrtxt = open('../texts/ctr11.txt', 'r')
+        vartxt = open('../texts/var2-f24.txt', 'r')
+        ctrtxt = open('../texts/ctr2-f24.txt', 'r')
 
         var = []
         n_dict = {}
@@ -30,26 +18,31 @@ class Model():
 
         for v_lines in vartxt.readlines()[1:]:
             var.append(v_lines.split()[0]) #Stores variables 
+            int_var = [eval(i) for i in var] #Transforms string to int 
+
             dom = (v_lines.split()[-1]) #Get domain number
             dom = int(dom)
 
-            values = linecache.getline('../texts/dom11.txt', dom + 2)
+            values = linecache.getline('../texts/dom2-f24.txt', dom + 2)
             values = ' '.join(values.split()[1:]) #ignore first word
             values = values.split()
-            dom_dict[var[-1]] = values
+
+            int_values = [eval(i) for i in values]
+            dom_dict[int(var[-1])] = int_values
 
             #### can optimize later if sort file and then go through the file -> O(n)
             for ctr_lines in ctrtxt.readlines()[1:]:
                 ctr_lines = ctr_lines.split()
                 var_check = int(ctr_lines[0])
                 curr_neig = int(ctr_lines[1])
+
                 if var_check == int(var[-1]):
-                    neighbors.append(curr_neig)
+                    neighbors.append(int(curr_neig))
                 elif curr_neig == int(var[-1]):
-                    neighbors.append(var_check)
+                    neighbors.append(int(var_check))
 
 
-            n_dict[var[-1]] = list(neighbors)
+            n_dict[int(var[-1])] = list(neighbors)
             neighbors.clear()
             ctrtxt.seek(0)
 
@@ -57,19 +50,41 @@ class Model():
         vartxt.close()
         ctrtxt.close()
 
-        return var, dom_dict, n_dict
+        return int_var, dom_dict, n_dict
     
 
-    #TODO: constraints:function if A, B satisfies the constraint
+    def constraint_check(A, a, B, b):
+        ctrtxt = open('../texts/ctr2-f24.txt', 'r')
+        for ctr_lines in ctrtxt.readlines()[1:]:
+            ctr_lines = ctr_lines.split()
+            first_var = int(ctr_lines[0])
+            second_var = int(ctr_lines[1])
+            symbol = ctr_lines[2]
+            k = int(ctr_lines[3])
+            sub = abs(a - b)
 
+            if (first_var == A and second_var == B) or (first_var == B and second_var == A):
+                
+                if symbol == '>' and sub > k:
+                    ctrtxt.close()
+                    return True
+                
+                if symbol == '=' and sub == k:
+                    ctrtxt.close()
+                    return True
+        
+                ctrtxt.close()                    
+                return False
+                
+        #Not found    
+        print("Does not exit!")            
+        return False
 
-# print([x.split(' ')[0] for x in open('../texts/var11.txt').readlines()])        
-def main(): 
-    var, dom_dict, n_dict = Model.info_ret()
-    print(n_dict)
-
-    
 
 
 if __name__== "__main__": 
-    main() 
+    variables, domains, neighbors = Model.info_ret()
+    problem = CSP(variables, domains, neighbors, Model.constraint_check)
+    
+    result = backtracking_search(problem, select_unassigned_variable=mrv, inference=forward_checking) is not None
+    print(result)
