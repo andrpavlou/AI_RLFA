@@ -1,7 +1,7 @@
-from csp import *
+from newcsp import *
 import linecache 
-
-    
+  
+import time
 
 class Model():
     def __init__(self):
@@ -81,10 +81,13 @@ class Model():
         return False
 
 
-
 if __name__== "__main__": 
     variables, domains, neighbors = Model.info_ret()
-    problem = CSP(variables, domains, neighbors, Model.constraint_check)
-    
-    result = backtracking_search(problem, select_unassigned_variable=mrv, inference=forward_checking) is not None
-    print(result)
+    problem = NewCSP(variables, domains, neighbors, Model.constraint_check)
+
+    start = time.time()
+    result = backtracking_search2(problem, select_unassigned_variable=mrv, inference=forward_checking) is not None
+    end = time.time()
+
+
+    print("Time elapsed: ", (end - start))
