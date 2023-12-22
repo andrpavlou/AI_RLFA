@@ -101,9 +101,6 @@ def forward_checking(csp, var, value, assignment, removals):
                         csp.con_list[i][1] += 1
                         csp.con_list[i] = tuple(csp.con_list[i])
 
-
-                        #2 3 8
-
             if not csp.curr_domains[B]:
                 return False
     return True
