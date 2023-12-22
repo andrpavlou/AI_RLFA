@@ -30,9 +30,13 @@ class Model():
             int_values = [eval(i) for i in values]
             dom_dict[int(var[-1])] = int_values
 
+            con_list = []
             #### can optimize later if sort file and then go through the file -> O(n)
             for ctr_lines in ctrtxt.readlines()[1:]:
                 ctr_lines = ctr_lines.split()
+
+                con_list.append((ctr_lines, 1))
+
                 var_check = int(ctr_lines[0])
                 curr_neig = int(ctr_lines[1])
 
@@ -50,7 +54,7 @@ class Model():
         vartxt.close()
         ctrtxt.close()
 
-        return int_var, dom_dict, n_dict
+        return int_var, dom_dict, n_dict, con_list
     
 
     def constraint_check(A, a, B, b):
@@ -81,13 +85,18 @@ class Model():
         return False
 
 
+    """
+    con_list [0][0] first constraint
+    con_list [0][0][0] first value of the first constraint
+    con_list[0][1] counter of the first constraint
+    """
 if __name__== "__main__": 
-    variables, domains, neighbors = Model.info_ret()
-    problem = NewCSP(variables, domains, neighbors, Model.constraint_check)
+    variables, domains, neighbors, con_list = Model.info_ret()
+    problem = NewCSP(variables, domains, neighbors, Model.constraint_check, con_list)
 
     start = time.time()
     result = backtracking_search2(problem, select_unassigned_variable=mrv, inference=forward_checking) is not None
     end = time.time()
-
+    print(problem.con_list)
 
     print("Time elapsed: ", (end - start))

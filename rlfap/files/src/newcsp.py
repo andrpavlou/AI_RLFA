@@ -1,8 +1,8 @@
 from csp import *
 
 class NewCSP(CSP):
-    def __init__(self, variables, domains, neighbors, constraints):
-        self.score = 0;
+    def __init__(self, variables, domains, neighbors, constraints, constrain_list):
+        self.con_list = constrain_list
         """Construct a CSP problem. If variables is empty, it becomes domains.keys()."""
         super().__init__(variables, domains, neighbors, constraints)
 
@@ -15,17 +15,6 @@ def mrv(assignment, csp):
 
 
 
-def forward_checking(csp, var, value, assignment, removals):
-    """Prune neighbor values inconsistent with var=value."""
-    csp.support_pruning()
-    for B in csp.neighbors[var]:
-        if B not in assignment:
-            for b in csp.curr_domains[B][:]:
-                if not csp.constraints(var, value, B, b):
-                    csp.prune(B, b, removals)
-            if not csp.curr_domains[B]:
-                return False
-    return True
 
 # ______________________________________________________________________________
 # Constraint Propagation with AC3
@@ -94,6 +83,30 @@ def mac(csp, var, value, assignment, removals, constraint_propagation=AC3b):
     """Maintain arc consistency."""
     return constraint_propagation(csp, {(X, var) for X in csp.neighbors[var]}, removals)
 
+def forward_checking(csp, var, value, assignment, removals):
+    """Prune neighbor values inconsistent with var=value."""
+    csp.support_pruning()
+
+    for B in csp.neighbors[var]:
+        if B not in assignment:
+            for b in csp.curr_domains[B][:]:
+                if not csp.constraints(var, value, B, b):
+                    csp.prune(B, b, removals)
+
+            if len(csp.curr_domains[B]) == 0:
+                for i in range(len(csp.con_list)):
+                    if int(csp.con_list[i][0][0]) == int(var) and int(csp.con_list[i][0][1]) == int(B) or \
+                    int(csp.con_list[i][0][0]) == int(B) and int(csp.con_list[i][0][1]) == int(var):
+                        csp.con_list[i] = list(csp.con_list[i])
+                        csp.con_list[i][1] += 1
+                        csp.con_list[i] = tuple(csp.con_list[i])
+
+
+                        #2 3 8
+
+            if not csp.curr_domains[B]:
+                return False
+    return True
 
 # The search, proper
 
@@ -104,7 +117,6 @@ def backtracking_search2(csp, select_unassigned_variable=first_unassigned_variab
 
     def backtrack2(assignment):
         if len(assignment) == len(csp.variables):
-            print(assignment)
             return assignment
         var = select_unassigned_variable(assignment, csp)
         for value in order_domain_values(var, assignment, csp):
