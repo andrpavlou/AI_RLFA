@@ -1,10 +1,10 @@
 from csp import *
 
 class NewCSP(CSP):
-    def __init__(self, variables, domains, neighbors, constraints, constrain_list):
-        self.con_list = constrain_list
+    def __init__(self, variables, domains, neighbors, constraints, constraint_dict):
+        self.con_dict = constraint_dict
         """Construct a CSP problem. If variables is empty, it becomes domains.keys()."""
-        super().__init__(variables, domains, neighbors, constraints)
+        super().__init__(variables, domains, neighbors, constraints, constraint_dict)
 
 
 def mrv(assignment, csp):
@@ -13,7 +13,8 @@ def mrv(assignment, csp):
                              key=lambda var: num_legal_values(csp, var, assignment))
 
 
-def dom_wget(csp, assignment, var):
+def dom_wdeg(csp, assignment, var):
+    # print(csp.nassigns)
     if csp.curr_domains is None:
         return count(csp.nconflicts(var, val, assignment) == 0 for val in csp.domains[var])
     
@@ -21,7 +22,7 @@ def dom_wget(csp, assignment, var):
         return float('inf')
     
     weight = 0
-    for con in csp.con_list:
+    for con in csp.con_dict[var]:
         if ((int(con[0][1]) == var) or \
         (int(con[0][0]) == var)):
             weight += con[1]
@@ -34,10 +35,10 @@ def dom_wget(csp, assignment, var):
 
     
 
-def wget(assignment, csp):
+def wdeg(assignment, csp):
     """Minimum-remaining-values heuristic."""
     return argmin_random_tie([v for v in csp.variables if v not in assignment],
-                             key=lambda var: dom_wget(csp, assignment, var))
+                             key=lambda var: dom_wdeg(csp, assignment, var))
 
 # ______________________________________________________________________________
 # Constraint Propagation with AC3
@@ -106,23 +107,23 @@ def mac(csp, var, value, assignment, removals, constraint_propagation=AC3b):
     """Maintain arc consistency."""
     return constraint_propagation(csp, {(X, var) for X in csp.neighbors[var]}, removals)
 
-def forward_checking(csp, var, value, assignment, removals):
+def forward_checking2(csp, var, value, assignment, removals):
     """Prune neighbor values inconsistent with var=value."""
     csp.support_pruning()
 
     for B in csp.neighbors[var]:
         if B not in assignment:
             for b in csp.curr_domains[B][:]:
-                if not csp.constraints(var, value, B, b):
+                if not csp.constraints(var, value, B, b, csp.con_dict):
                     csp.prune(B, b, removals)
 
             if len(csp.curr_domains[B]) == 0:
-                for i in range(len(csp.con_list)):
-                    if int(csp.con_list[i][0][0]) == int(var) and int(csp.con_list[i][0][1]) == int(B) or \
-                    int(csp.con_list[i][0][0]) == int(B) and int(csp.con_list[i][0][1]) == int(var):
-                        csp.con_list[i] = list(csp.con_list[i])
-                        csp.con_list[i][1] += 1
-                        csp.con_list[i] = tuple(csp.con_list[i])
+                constraint = csp.con_dict[B]
+                for i in range(len(constraint)):
+
+                    if int(constraint[i][0][0]) == int(var) and int(constraint[i][0][1]) == int(B) or \
+                    int(constraint[i][0][0]) == int(B) and int(constraint[i][0][1]) == int(var):
+                        constraint[i][1] += 1
                         break
 
             if not csp.curr_domains[B]:
@@ -138,7 +139,6 @@ def backtracking_search2(csp, select_unassigned_variable=first_unassigned_variab
 
     def backtrack2(assignment):
         if len(assignment) == len(csp.variables):
-            print(csp.nassigns)
             return assignment
         var = select_unassigned_variable(assignment, csp)
         for value in order_domain_values(var, assignment, csp):

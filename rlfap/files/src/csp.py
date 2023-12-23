@@ -51,7 +51,7 @@ class CSP(search.Problem):
         display(a)              Print a human-readable representation
     """
 
-    def __init__(self, variables, domains, neighbors, constraints):
+    def __init__(self, variables, domains, neighbors, constraints, con_dict):
         """Construct a CSP problem. If variables is empty, it becomes domains.keys()."""
         super().__init__(())
         variables = variables or list(domains.keys())
@@ -59,6 +59,7 @@ class CSP(search.Problem):
         self.domains = domains
         self.neighbors = neighbors
         self.constraints = constraints
+        self.con_dict = con_dict
         self.curr_domains = None
         self.nassigns = 0
 
@@ -79,7 +80,7 @@ class CSP(search.Problem):
 
         # Subclasses may implement this more efficiently
         def conflict(var2):
-            return var2 in assignment and not self.constraints(var, val, var2, assignment[var2])
+            return var2 in assignment and not self.constraints(var, val, var2, assignment[var2], self.con_dict)
 
         return count(conflict(v) for v in self.neighbors[var])
 
@@ -571,14 +572,14 @@ def different_values_constraint(A, a, B, b):
     return a != b
 
 
-def MapColoringCSP(colors, neighbors):
-    """Make a CSP for the problem of coloring a map with different colors
-    for any two adjacent regions. Arguments are a list of colors, and a
-    dict of {region: [neighbor,...]} entries. This dict may also be
-    specified as a string of the form defined by parse_neighbors."""
-    if isinstance(neighbors, str):
-        neighbors = parse_neighbors(neighbors)
-    return CSP(list(neighbors.keys()), UniversalDict(colors), neighbors, different_values_constraint)
+# def MapColoringCSP(colors, neighbors):
+#     """Make a CSP for the problem of coloring a map with different colors
+#     for any two adjacent regions. Arguments are a list of colors, and a
+#     dict of {region: [neighbor,...]} entries. This dict may also be
+#     specified as a string of the form defined by parse_neighbors."""
+#     if isinstance(neighbors, str):
+#         neighbors = parse_neighbors(neighbors)
+#     return CSP(list(neighbors.keys()), UniversalDict(colors), neighbors, different_values_constraint)
 
 
 def parse_neighbors(neighbors):
@@ -599,26 +600,26 @@ def parse_neighbors(neighbors):
     return dic
 
 
-australia_csp = MapColoringCSP(list('RGB'), """SA: WA NT Q NSW V; NT: WA Q; NSW: Q V; T: """)
+# australia_csp = MapColoringCSP(list('RGB'), """SA: WA NT Q NSW V; NT: WA Q; NSW: Q V; T: """)
 
-usa_csp = MapColoringCSP(list('RGBY'),
-                         """WA: OR ID; OR: ID NV CA; CA: NV AZ; NV: ID UT AZ; ID: MT WY UT;
-                         UT: WY CO AZ; MT: ND SD WY; WY: SD NE CO; CO: NE KA OK NM; NM: OK TX AZ;
-                         ND: MN SD; SD: MN IA NE; NE: IA MO KA; KA: MO OK; OK: MO AR TX;
-                         TX: AR LA; MN: WI IA; IA: WI IL MO; MO: IL KY TN AR; AR: MS TN LA;
-                         LA: MS; WI: MI IL; IL: IN KY; IN: OH KY; MS: TN AL; AL: TN GA FL;
-                         MI: OH IN; OH: PA WV KY; KY: WV VA TN; TN: VA NC GA; GA: NC SC FL;
-                         PA: NY NJ DE MD WV; WV: MD VA; VA: MD DC NC; NC: SC; NY: VT MA CT NJ;
-                         NJ: DE; DE: MD; MD: DC; VT: NH MA; MA: NH RI CT; CT: RI; ME: NH;
-                         HI: ; AK: """)
+# usa_csp = MapColoringCSP(list('RGBY'),
+#                          """WA: OR ID; OR: ID NV CA; CA: NV AZ; NV: ID UT AZ; ID: MT WY UT;
+#                          UT: WY CO AZ; MT: ND SD WY; WY: SD NE CO; CO: NE KA OK NM; NM: OK TX AZ;
+#                          ND: MN SD; SD: MN IA NE; NE: IA MO KA; KA: MO OK; OK: MO AR TX;
+#                          TX: AR LA; MN: WI IA; IA: WI IL MO; MO: IL KY TN AR; AR: MS TN LA;
+#                          LA: MS; WI: MI IL; IL: IN KY; IN: OH KY; MS: TN AL; AL: TN GA FL;
+#                          MI: OH IN; OH: PA WV KY; KY: WV VA TN; TN: VA NC GA; GA: NC SC FL;
+#                          PA: NY NJ DE MD WV; WV: MD VA; VA: MD DC NC; NC: SC; NY: VT MA CT NJ;
+#                          NJ: DE; DE: MD; MD: DC; VT: NH MA; MA: NH RI CT; CT: RI; ME: NH;
+#                          HI: ; AK: """)
 
-france_csp = MapColoringCSP(list('RGBY'),
-                            """AL: LO FC; AQ: MP LI PC; AU: LI CE BO RA LR MP; BO: CE IF CA FC RA
-                            AU; BR: NB PL; CA: IF PI LO FC BO; CE: PL NB NH IF BO AU LI PC; FC: BO
-                            CA LO AL RA; IF: NH PI CA BO CE; LI: PC CE AU MP AQ; LO: CA AL FC; LR:
-                            MP AU RA PA; MP: AQ LI AU LR; NB: NH CE PL BR; NH: PI IF CE NB; NO:
-                            PI; PA: LR RA; PC: PL CE LI AQ; PI: NH NO CA IF; PL: BR NB CE PC; RA:
-                            AU BO FC PA LR""")
+# france_csp = MapColoringCSP(list('RGBY'),
+#                             """AL: LO FC; AQ: MP LI PC; AU: LI CE BO RA LR MP; BO: CE IF CA FC RA
+#                             AU; BR: NB PL; CA: IF PI LO FC BO; CE: PL NB NH IF BO AU LI PC; FC: BO
+#                             CA LO AL RA; IF: NH PI CA BO CE; LI: PC CE AU MP AQ; LO: CA AL FC; LR:
+#                             MP AU RA PA; MP: AQ LI AU LR; NB: NH CE PL BR; NH: PI IF CE NB; NO:
+#                             PI; PA: LR RA; PC: PL CE LI AQ; PI: NH NO CA IF; PL: BR NB CE PC; RA:
+#                             AU BO FC PA LR""")
 
 
 # ______________________________________________________________________________

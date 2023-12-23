@@ -4,12 +4,11 @@ import linecache
 import time
 
 class Model():
-    def __init__(self):
-        self.score = 0
+    # def __init__():
 
     def info_ret():
-        vartxt = open('../texts/var2-f24.txt', 'r')
-        ctrtxt = open('../texts/ctr2-f24.txt', 'r')
+        vartxt = open('../texts/var11.txt', 'r')
+        ctrtxt = open('../texts/ctr11.txt', 'r')
 
         var = []
         n_dict = {}
@@ -23,19 +22,17 @@ class Model():
             dom = (v_lines.split()[-1]) #Get domain number
             dom = int(dom)
 
-            values = linecache.getline('../texts/dom2-f24.txt', dom + 2)
+            values = linecache.getline('../texts/dom11.txt', dom + 2)
             values = ' '.join(values.split()[1:]) #ignore first word
             values = values.split()
 
             int_values = [eval(i) for i in values]
             dom_dict[int(var[-1])] = int_values
 
-            con_list = []
             #### can optimize later if sort file and then go through the file -> O(n)
             for ctr_lines in ctrtxt.readlines()[1:]:
                 ctr_lines = ctr_lines.split()
 
-                con_list.append((ctr_lines, 1))
 
                 var_check = int(ctr_lines[0])
                 curr_neig = int(ctr_lines[1])
@@ -50,33 +47,43 @@ class Model():
             neighbors.clear()
             ctrtxt.seek(0)
 
+        con_dict = {}
+        con_list = []
+        for var1 in int_var:
+            for ctr_lines in ctrtxt.readlines()[1:]:
+                ctr_lines = ctr_lines.split()   
+
+                if int(var1) == int(ctr_lines[0]) or int(var1) == int(ctr_lines[1]):
+                    con_list.append([ctr_lines, 1])
+
+            con_dict[var1] = list(con_list)
+            ctrtxt.seek(0) 
+            con_list.clear()
+
 
         vartxt.close()
         ctrtxt.close()
 
-        return int_var, dom_dict, n_dict, con_list
+        return int_var, dom_dict, n_dict, con_dict
 
-    def constraint_check(A, a, B, b):
-        ctrtxt = open('../texts/ctr2-f24.txt', 'r')
-        for ctr_lines in ctrtxt.readlines()[1:]:
-            ctr_lines = ctr_lines.split()
-            first_var = int(ctr_lines[0])
-            second_var = int(ctr_lines[1])
-            symbol = ctr_lines[2]
-            k = int(ctr_lines[3])
-            sub = abs(a - b)
+    def constraint_check(A, a, B, b, con_dict):
+        constraint = con_dict[A]
+        sub = abs(a - b)
+
+        for con in constraint:
+            first_var = int(con[0][0])
+            second_var = int(con[0][1])
+            symbol = (con[0][2])
+            k = int(con[0][3])
+        
 
             if (first_var == A and second_var == B) or (first_var == B and second_var == A):
-                
                 if symbol == '>' and sub > k:
-                    ctrtxt.close()
                     return True
-                
+            
                 if symbol == '=' and sub == k:
-                    ctrtxt.close()
                     return True
-        
-                ctrtxt.close()                    
+                    
                 return False
                 
         #Not found    
@@ -90,11 +97,19 @@ class Model():
     con_list[0][1] counter of the first constraint
     """
 if __name__== "__main__": 
-    variables, domains, neighbors, con_list = Model.info_ret()
-    problem = NewCSP(variables, domains, neighbors, Model.constraint_check, con_list)
+    variables, domains, neighbors, con_dict = Model.info_ret()
 
+    problem = NewCSP(variables, domains, neighbors, Model.constraint_check, con_dict)
+
+
+
+    print("------WDEG------")
+
+    problem.nassigns = 0
     start = time.time()
-    result = backtracking_search2(problem, select_unassigned_variable=wget, inference=forward_checking) is not None
+    result = backtracking_search2(problem, select_unassigned_variable=wdeg, inference=forward_checking2) is not None
+    print(problem.nassigns)
+    print(result)
     end = time.time()
-
     print("Time elapsed: ", (end - start))
+
