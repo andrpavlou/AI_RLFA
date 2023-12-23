@@ -55,7 +55,6 @@ class Model():
         ctrtxt.close()
 
         return int_var, dom_dict, n_dict, con_list
-    
 
     def constraint_check(A, a, B, b):
         ctrtxt = open('../texts/ctr2-f24.txt', 'r')
