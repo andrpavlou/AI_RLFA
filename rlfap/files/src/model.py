@@ -95,8 +95,7 @@ if __name__== "__main__":
     problem = NewCSP(variables, domains, neighbors, Model.constraint_check, con_list)
 
     start = time.time()
-    result = backtracking_search2(problem, select_unassigned_variable=mrv, inference=forward_checking) is not None
+    result = backtracking_search2(problem, select_unassigned_variable=wget, inference=forward_checking) is not None
     end = time.time()
-    print(problem.con_list)
 
     print("Time elapsed: ", (end - start))

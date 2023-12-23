@@ -13,8 +13,31 @@ def mrv(assignment, csp):
                              key=lambda var: num_legal_values(csp, var, assignment))
 
 
+def dom_wget(csp, assignment, var):
+    if csp.curr_domains is None:
+        return count(csp.nconflicts(var, val, assignment) == 0 for val in csp.domains[var])
+    
+    if var in assignment:
+        return float('inf')
+    
+    weight = 0
+    for con in csp.con_list:
+        if ((int(con[0][1]) == var) or \
+        (int(con[0][0]) == var)):
+            weight += con[1]
+   
+    if weight:
+            return len(csp.curr_domains[var]) / weight
 
+    return float('inf')
+    
 
+    
+
+def wget(assignment, csp):
+    """Minimum-remaining-values heuristic."""
+    return argmin_random_tie([v for v in csp.variables if v not in assignment],
+                             key=lambda var: dom_wget(csp, assignment, var))
 
 # ______________________________________________________________________________
 # Constraint Propagation with AC3
@@ -97,10 +120,10 @@ def forward_checking(csp, var, value, assignment, removals):
                 for i in range(len(csp.con_list)):
                     if int(csp.con_list[i][0][0]) == int(var) and int(csp.con_list[i][0][1]) == int(B) or \
                     int(csp.con_list[i][0][0]) == int(B) and int(csp.con_list[i][0][1]) == int(var):
-                        
                         csp.con_list[i] = list(csp.con_list[i])
                         csp.con_list[i][1] += 1
                         csp.con_list[i] = tuple(csp.con_list[i])
+                        break
 
             if not csp.curr_domains[B]:
                 return False
@@ -115,6 +138,7 @@ def backtracking_search2(csp, select_unassigned_variable=first_unassigned_variab
 
     def backtrack2(assignment):
         if len(assignment) == len(csp.variables):
+            print(csp.nassigns)
             return assignment
         var = select_unassigned_variable(assignment, csp)
         for value in order_domain_values(var, assignment, csp):
@@ -128,7 +152,7 @@ def backtracking_search2(csp, select_unassigned_variable=first_unassigned_variab
                 csp.restore(removals)
         csp.unassign(var, assignment)
         return None
-
+    
     result = backtrack2({})
 
     assert result is None or csp.goal_test(result)
