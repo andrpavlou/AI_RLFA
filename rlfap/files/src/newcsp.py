@@ -13,33 +13,37 @@ def mrv(assignment, csp):
                              key=lambda var: num_legal_values(csp, var, assignment))
 
 
-def dom_wdeg(csp, assignment, var):
-    # print(csp.nassigns)
-    if csp.curr_domains is None:
-        return count(csp.nconflicts(var, val, assignment) == 0 for val in csp.domains[var])
-    
-    if var in assignment:
-        return float('inf')
-    
-    weight = 0
+def dom_wdeg(csp, assignment, var): 
+
+    weight = 1
     for con in csp.con_dict[var]:
-        if ((int(con[0][1]) == var) or \
-        (int(con[0][0]) == var)):
+        if int(con[0][0]) not in assignment and int(con[0][1]) not in assignment:
             weight += con[1]
-   
-    if weight:
-            return len(csp.curr_domains[var]) / weight
 
-    return float('inf')
-    
+    return len(csp.curr_domains[var]) / weight    
 
     
-
 def wdeg(assignment, csp):
+    print(csp.nassigns)
     """Minimum-remaining-values heuristic."""
-    return argmin_random_tie([v for v in csp.variables if v not in assignment],
-                             key=lambda var: dom_wdeg(csp, assignment, var))
+    if csp.curr_domains is None:
+        return first_unassigned_variable(assignment, csp)
+    
+    min_value = float('inf')
+    min_var = 0
+    for v in csp.variables:
+        if v not in assignment:
+            curr_value = dom_wdeg(csp, assignment, v)
+            if min_value >= curr_value:
+                min_value = curr_value
+                min_var = v
 
+    if min_var == 0:
+        return first_unassigned_variable(assignment, csp)
+    # print(min_var)
+    return min_var
+    
+    
 # ______________________________________________________________________________
 # Constraint Propagation with AC3
 
@@ -52,7 +56,34 @@ def dom_j_up(csp, queue):
     return SortedSet(queue, key=lambda t: neg(len(csp.curr_domains[t[1]])))
 
 
-def AC3b(csp, queue=None, removals=None, arc_heuristic=dom_j_up):
+def revise2(csp, Xi, Xj, removals, checks=0):
+    """Return true if we remove a value."""
+    revised = False
+    for x in csp.curr_domains[Xi][:]:
+        # If Xi=x conflicts with Xj=y for every possible y, eliminate Xi=x
+        # if all(not csp.constraints(Xi, x, Xj, y) for y in csp.curr_domains[Xj]):
+        conflict = True
+        for y in csp.curr_domains[Xj]:
+            if csp.constraints(Xi, x, Xj, y, csp.con_dict):
+                conflict = False
+            checks += 1
+            if not conflict:
+                break
+        if conflict:
+            csp.prune(Xi, x, removals)
+            revised = True
+
+###################################
+    if len(csp.curr_domains[Xi]) == 0:
+        constraint = csp.con_dict[Xi]
+        for i in range(len(constraint)):
+            if int(constraint[i][0][0]) == int(Xi) and int(constraint[i][0][1]) == int(Xj) or \
+            int(constraint[i][0][0]) == int(Xj) and int(constraint[i][0][1]) == int(Xi):
+                constraint[i][1] += 1
+
+    return revised, checks
+def AC3_2(csp, queue=None, removals=None, arc_heuristic=dom_j_up):
+    """[Figure 6.3]"""
     if queue is None:
         queue = {(Xi, Xk) for Xi in csp.variables for Xk in csp.neighbors[Xi]}
     csp.support_pruning()
@@ -60,50 +91,17 @@ def AC3b(csp, queue=None, removals=None, arc_heuristic=dom_j_up):
     checks = 0
     while queue:
         (Xi, Xj) = queue.pop()
-        # Si_p values are all known to be supported by Xj
-        # Sj_p values are all known to be supported by Xi
-        # Dj - Sj_p = Sj_u values are unknown, as yet, to be supported by Xi
-        Si_p, Sj_p, Sj_u, checks = partition(csp, Xi, Xj, checks)
-        if not Si_p:
-            return False, checks  # CSP is inconsistent
-        revised = False
-        for x in set(csp.curr_domains[Xi]) - Si_p:
-            csp.prune(Xi, x, removals)
-            revised = True
+        revised, checks = revise2(csp, Xi, Xj, removals, checks)
         if revised:
+            if not csp.curr_domains[Xi]:
+                return False, checks  # CSP is inconsistent
             for Xk in csp.neighbors[Xi]:
                 if Xk != Xj:
                     queue.add((Xk, Xi))
-        if (Xj, Xi) in queue:
-            if isinstance(queue, set):
-                # or queue -= {(Xj, Xi)} or queue.remove((Xj, Xi))
-                queue.difference_update({(Xj, Xi)})
-            else:
-                queue.difference_update((Xj, Xi))
-            # the elements in D_j which are supported by Xi are given by the union of Sj_p with the set of those
-            # elements of Sj_u which further processing will show to be supported by some vi_p in Si_p
-            for vj_p in Sj_u:
-                for vi_p in Si_p:
-                    conflict = True
-                    if csp.constraints(Xj, vj_p, Xi, vi_p):
-                        conflict = False
-                        Sj_p.add(vj_p)
-                    checks += 1
-                    if not conflict:
-                        break
-            revised = False
-            for x in set(csp.curr_domains[Xj]) - Sj_p:
-                csp.prune(Xj, x, removals)
-                revised = True
-            if revised:
-                for Xk in csp.neighbors[Xj]:
-                    if Xk != Xi:
-                        queue.add((Xk, Xj))
     return True, checks  # CSP is satisfiable
 
 
-
-def mac(csp, var, value, assignment, removals, constraint_propagation=AC3b):
+def mac2(csp, var, value, assignment, removals, constraint_propagation=AC3_2):
     """Maintain arc consistency."""
     return constraint_propagation(csp, {(X, var) for X in csp.neighbors[var]}, removals)
 
@@ -120,7 +118,6 @@ def forward_checking2(csp, var, value, assignment, removals):
             if len(csp.curr_domains[B]) == 0:
                 constraint = csp.con_dict[B]
                 for i in range(len(constraint)):
-
                     if int(constraint[i][0][0]) == int(var) and int(constraint[i][0][1]) == int(B) or \
                     int(constraint[i][0][0]) == int(B) and int(constraint[i][0][1]) == int(var):
                         constraint[i][1] += 1

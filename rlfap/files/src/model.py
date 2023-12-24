@@ -4,7 +4,6 @@ import linecache
 import time
 
 class Model():
-    # def __init__():
 
     def info_ret():
         vartxt = open('../texts/var11.txt', 'r')
@@ -22,6 +21,7 @@ class Model():
             dom = (v_lines.split()[-1]) #Get domain number
             dom = int(dom)
 
+            #3-f11.txt
             values = linecache.getline('../texts/dom11.txt', dom + 2)
             values = ' '.join(values.split()[1:]) #ignore first word
             values = values.split()
@@ -99,17 +99,27 @@ class Model():
 if __name__== "__main__": 
     variables, domains, neighbors, con_dict = Model.info_ret()
 
+
+
     problem = NewCSP(variables, domains, neighbors, Model.constraint_check, con_dict)
+    problem2 = NewCSP(variables, domains, neighbors, Model.constraint_check, con_dict)
 
 
+    print("------WDEG------\n")
 
-    print("------WDEG------")
+    # print("------MAC------")
+    # start = time.time()
+    # result = backtracking_search2(problem, select_unassigned_variable=wdeg, inference=mac2) is not None
+    # print(problem.nassigns)
+    # print(result)
+    # end = time.time()
+    # print("Time elapsed: ", (end - start))
 
-    problem.nassigns = 0
+    print("------MAC------")
     start = time.time()
-    result = backtracking_search2(problem, select_unassigned_variable=wdeg, inference=forward_checking2) is not None
-    print(problem.nassigns)
-    print(result)
+    result2 = backtracking_search2(problem2, select_unassigned_variable=wdeg, order_domain_values=lcv, inference=mac2) is not None
+    print(problem2.nassigns)
+    print(result2)
     end = time.time()
     print("Time elapsed: ", (end - start))
 

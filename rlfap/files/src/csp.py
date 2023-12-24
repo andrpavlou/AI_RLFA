@@ -197,7 +197,7 @@ def revise(csp, Xi, Xj, removals, checks=0):
         # if all(not csp.constraints(Xi, x, Xj, y) for y in csp.curr_domains[Xj]):
         conflict = True
         for y in csp.curr_domains[Xj]:
-            if csp.constraints(Xi, x, Xj, y):
+            if csp.constraints(Xi, x, Xj, y, csp.con_dict):
                 conflict = False
             checks += 1
             if not conflict:
@@ -205,6 +205,7 @@ def revise(csp, Xi, Xj, removals, checks=0):
         if conflict:
             csp.prune(Xi, x, removals)
             revised = True
+
     return revised, checks
 
 
@@ -265,6 +266,9 @@ def partition(csp, Xi, Xj, checks=0):
     Si_p = set()
     Sj_p = set()
     Sj_u = set(csp.curr_domains[Xj])
+    if (len(csp.curr_domains[Xi])) == 0:
+        print("inside")
+
     for vi_u in csp.curr_domains[Xi]:
         conflict = True
         # now, in order to establish support for a value vi_u in Di it seems better to try to find a support among
@@ -272,7 +276,7 @@ def partition(csp, Xi, Xj, checks=0):
         # and it is just as likely that any vj_u in Sj_u supports vi_u than it is that any vj_p in Sj_p does...
         for vj_u in Sj_u - Sj_p:
             # double-support check
-            if csp.constraints(Xi, vi_u, Xj, vj_u):
+            if csp.constraints(Xi, vi_u, Xj, vj_u, csp.con_dict):
                 conflict = False
                 Si_p.add(vi_u)
                 Sj_p.add(vj_u)
@@ -284,7 +288,7 @@ def partition(csp, Xi, Xj, checks=0):
         if conflict:
             for vj_p in Sj_p:
                 # single-support check
-                if csp.constraints(Xi, vi_u, Xj, vj_p):
+                if csp.constraints(Xi, vi_u, Xj, vj_p, csp.con_dict):
                     conflict = False
                     Si_p.add(vi_u)
                 checks += 1
