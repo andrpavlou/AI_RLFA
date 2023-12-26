@@ -6,8 +6,8 @@ import time
 class Model():
 
     def info_ret():
-        vartxt = open('../texts/var8-f11.txt', 'r')
-        ctrtxt = open('../texts/ctr8-f11.txt', 'r')
+        vartxt = open('../texts/var2-f25.txt', 'r')
+        ctrtxt = open('../texts/ctr2-f25.txt', 'r')
 
         var = []
         n_dict = {}
@@ -22,7 +22,7 @@ class Model():
             dom = int(dom)
 
             #3-f11.txt
-            values = linecache.getline('../texts/dom8-f11.txt', dom + 2)
+            values = linecache.getline('../texts/dom2-f25.txt', dom + 2)
             values = ' '.join(values.split()[1:]) #ignore first word
             values = values.split()
 
@@ -117,7 +117,7 @@ if __name__== "__main__":
 
     print("------MAC------")
     start = time.time()
-    result2 = backtracking_search2(problem2, select_unassigned_variable=wdeg, inference=mac2) is not None
+    result2 = backtracking_search(problem2, select_unassigned_variable=wdeg, order_domain_values=lcv, inference=forward_checking2) is not None
     print(problem2.nassigns)
     print(result2)
     end = time.time()
