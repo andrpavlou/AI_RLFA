@@ -14,7 +14,6 @@ class NewCSP(CSP):
 
 
 def dom_wdeg(csp, assignment, var): 
-
     weight = 1
     for con in csp.con_dict[var]:
         if int(con[0][0]) not in assignment and int(con[0][1]) not in assignment:
@@ -24,7 +23,7 @@ def dom_wdeg(csp, assignment, var):
 
     
 def wdeg(assignment, csp):
-    print(csp.nassigns)
+    # print(csp.nassigns)
     """Minimum-remaining-values heuristic."""
     if csp.curr_domains is None:
         return first_unassigned_variable(assignment, csp)
@@ -102,12 +101,16 @@ def mac2(csp, var, value, assignment, removals, constraint_propagation=AC3_2):
 def forward_checking2(csp, var, value, assignment, removals):
     """Prune neighbor values inconsistent with var=value."""
     csp.support_pruning()
+    cs_neighbors = []
+    last_var = None
 
     for B in csp.neighbors[var]:
         if B not in assignment:
             for b in csp.curr_domains[B][:]:
                 if not csp.constraints(var, value, B, b, csp.con_dict):
                     csp.prune(B, b, removals)
+
+                    cs_neighbors.append(B)
 ###########
 ###########
 ###########
@@ -117,7 +120,6 @@ def forward_checking2(csp, var, value, assignment, removals):
                     if int(constraint[i][0][0]) == int(var) and int(constraint[i][0][1]) == int(B) or \
                     int(constraint[i][0][0]) == int(B) and int(constraint[i][0][1]) == int(var):
                         constraint[i][1] += 1
-                        break
                     
             if len(csp.curr_domains[B]) == 0:
                 constraint = csp.con_dict[B]
@@ -125,53 +127,101 @@ def forward_checking2(csp, var, value, assignment, removals):
                     if int(constraint[i][0][0]) == int(var) and int(constraint[i][0][1]) == int(B) or \
                     int(constraint[i][0][0]) == int(B) and int(constraint[i][0][1]) == int(var):
                         constraint[i][1] += 1
-                        break
+
 
             if not csp.curr_domains[B]:
-                return False
-    return True
+                last_var = B
+                return False, cs_neighbors, last_var
+    return True, cs_neighbors, last_var
 
 
 def cbj_search(csp, select_unassigned_variable = wdeg,
                 order_domain_values = lcv, inference = forward_checking2):
     
-    conflict_set = {}
-    for var in csp.variables:
-        conflict_set[var] = []
 
+    def merge(var, jump_var):
+        union_cs =  []
+        
+
+        for conflict in csp.conflict_set[jump_var]:
+            if conflict != var:
+                union_cs.append(conflict)
+        
+        for conflict in csp.conflict_set[var]:
+            if conflict not in union_cs:
+                union_cs.append(conflict)
+
+        # print(union_cs)
+        csp.conflict_set[var].clear()
+        csp.conflict_set[jump_var].clear()
+        csp.conflict_set[var] = union_cs
+
+        return csp.conflict_set
     
+
+
+    def update_conflicts(var, cs_neighbors):
+        if cs_neighbors is None:
+            return csp.conflict_set
+        
+        for neighbor in cs_neighbors:
+            if var not in csp.conflict_set[neighbor]:
+                csp.conflict_set[neighbor].append(var)
+                
+        return csp.conflict_set
+    
+    def find_deepest_var(var, csp):
+        for conflicts in reversed(csp.conflict_set[var]):
+            if conflicts in csp.assignment_list:
+                return conflicts
+        return None
+
+
+    def clear_cs(var):
+        csp.conflict_set[var].clear()
+        return csp.conflict_set
+
     def cbj(assignment):
-        max_depth = 0
+        print(csp.nassigns)
+        last_var = None
+        cs_neighbors = []
         if len(assignment) == len(csp.variables):
             return assignment
         
-        var = select_unassigned_variable(assignment, csp)  
-        for value in order_domain_values(var, assignment, csp): 
+
+        var = select_unassigned_variable(assignment, csp)
+        for value in order_domain_values(var, assignment, csp):
             if 0 == csp.nconflicts(var, value, assignment):
                 csp.assign(var, value, assignment)
+
+                if var not in csp.assignment_list:
+                    csp.assignment_list.append(var)
+
                 removals = csp.suppose(var, value)
-                conflict_set[var].append(removals)
+                check, cs_neighbors, last_var = inference(csp, var, value, assignment, removals)
+                csp.conflict_set = update_conflicts(var, cs_neighbors) 
 
-                # if not lenconflict_set[var][0]):
-                    # conflict_set[var].append(value)
-                    # conflict_set[var]
-
-                print((conflict_set[var][-1]))
-                print("NEXT LINE")
-
-                # conflict_set[var] = [removals, depth]
-
-
-        # print(conflict_set[variable])
+                if not check:
+                    merge(var, last_var)
+                
+                if check:
+                    result = cbj(assignment)
+                    if result is not None:
+                        return result
+                csp.restore(removals)
                 
 
-
+            if csp.last_value_dom[var] == value:
+                last_var = find_deepest_var(var, csp)   
+                if last_var != None:
+                    var = last_var
             
-                
+            csp.unassign(var, assignment)            
+            
+        return None
 
-    
-    
     result = cbj({})
+
     assert result is None or csp.goal_test(result)
     return result
 
