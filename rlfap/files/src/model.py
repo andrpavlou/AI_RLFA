@@ -116,8 +116,10 @@ class Model():
         algorithm_match["fc"] = forward_checking2
         algorithm_match["mac"] = mac2
 
+
         search_algo = {}
         search_algo["bt"] = backtracking_search2
         search_algo["cbj"] = cbj_search
+        search_algo["min_conflicts"] = min_conflicts
         return var_order_match, algorithm_match, search_algo
     

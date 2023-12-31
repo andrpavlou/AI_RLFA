@@ -13,7 +13,7 @@ newcsp.py: Inherits csp class and implements:
     which takes into consideration the amount of values that the current domain
     of the variable has, devided by the previous created sum. At the end the 
     variable with the minimum ratio is returned.
-    
+
     2)Conflict Directed Backtracking:
     Similar implementation of Backtracking, but instead for each variable
     there is a conflict set which stores the previous conflicted variables, 
@@ -33,6 +33,17 @@ model.py: Functions created:
     2)constraint_check: Checks wether the constraint is satisfied between
     two variables (neighbors), given certain values. 
     3)unpack_arguements: Retreives arguements from command line.
+
+Available options to run an instance of RLFA and solve it:
+Order Domain Values: LCV
+Search Algorithm: BT/CBJ
+Variable Ordering: DOM_WDEG/MRV
+Inference: FC/MAC/MIN CONFLICTS
+
+How to run examples: 
+python3 solve.py mac bt wdeg 2-f25
+python3 solve.py fc cbj mrv 3-f10
+python3 solve.py - min_conflicts 2-f24
 """
 
 
@@ -41,7 +52,7 @@ if __name__== "__main__":
     vo_map, inf_map, search_map = Model.unpack_arguements(inference, search_method, var_ordering)
 
 
-    if inference not in inf_map.keys():
+    if inference not in inf_map.keys() and search_method != "min_conflicts":
         print("\n---Wrong Inference, try again. Run example: python3 solve.py fc bt wdeg 2-f25---\n\n\n\n")
         exit()
 
@@ -49,7 +60,7 @@ if __name__== "__main__":
         print("\n---Wrong search algorithm, try again. Run example: python3 solve.py fc bt wdeg 2-f25---\n\n\n\n")
         exit()
 
-    if var_ordering not in vo_map.keys():
+    if var_ordering not in vo_map.keys() and search_method != "min_conflicts":
         print("\n---Wrong heuristic, try again. Run example: python3 solve.py fc bt wdeg 2-f25---\n\n\n\n")
         exit()
 
@@ -59,15 +70,36 @@ if __name__== "__main__":
     print("Select Unassigned Variable:", var_ordering.upper())
     print("Order Domain Values: LCV")
     print("Inference:", inference.upper())
+    print("Instance: ", instance)
     print("--------------------------")
 
 
     variables, domains, neighbors, con_dict = Model.info_ret(instance)
     problem = NewCSP(variables, domains, neighbors, Model.constraint_check, con_dict)
+    if search_method == "min_conflicts":
+        start = time.time()
+    
+        result = search_map[search_method](problem, 10000)
+        end = time.time()
+
+        print("\n\n---------Results---------")
+        if result is None:
+            print("The instance does not have a solution.")
+        else:
+            print("Result: ", result)
+
+        print("Assignments: ", problem.nassigns)
+        print("Checks: ", problem.check)
+        print("Time elapsed: ", (end - start))
+    
+        exit()
+
+
+        
     start = time.time()
     
     result = search_map[search_method](problem, select_unassigned_variable = vo_map[var_ordering], 
-                        order_domain_values = lcv, inference = inf_map[inference])
+                        order_domain_values = unordered_domain_values, inference = inf_map[inference])
     end = time.time()
 
 
