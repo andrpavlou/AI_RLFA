@@ -62,17 +62,15 @@ class CSP(search.Problem):
         self.con_dict = con_dict
         self.curr_domains = None
         self.nassigns = 0
+        self.old_cs = []
+        self.old_conflicts = {}
         self.conflict_set = {}
-        self.last_value_dom = {}
-        self.assignment_list = []
-        self.last_variable = None
-
-        for var in variables:
-            self.conflict_set[var] = []
     
-        for var in variables:
-            self.last_value_dom[var] = domains[var][-1]
 
+        for var in self.variables:
+            self.old_conflicts = []
+            self.conflict_set[var] = []
+     
     def assign(self, var, val, assignment):
         """Add {var: val} to assignment; Discard the old value if any."""
         assignment[var] = val
@@ -276,8 +274,6 @@ def partition(csp, Xi, Xj, checks=0):
     Si_p = set()
     Sj_p = set()
     Sj_u = set(csp.curr_domains[Xj])
-    if (len(csp.curr_domains[Xi])) == 0:
-        print("inside")
 
     for vi_u in csp.curr_domains[Xi]:
         conflict = True
