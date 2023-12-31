@@ -62,14 +62,7 @@ class CSP(search.Problem):
         self.con_dict = con_dict
         self.curr_domains = None
         self.nassigns = 0
-        self.old_cs = []
-        self.old_conflicts = {}
-        self.conflict_set = {}
-    
-
-        for var in self.variables:
-            self.old_conflicts = []
-            self.conflict_set[var] = []
+        
      
     def assign(self, var, val, assignment):
         """Add {var: val} to assignment; Discard the old value if any."""

@@ -4,7 +4,15 @@ class NewCSP(CSP):
     def __init__(self, variables, domains, neighbors, constraints, constraint_dict):
         super().__init__(variables, domains, neighbors, constraints, constraint_dict)
         self.con_dict = constraint_dict
+        self.old_cs = []
+        self.old_conflicts = {}
+        self.conflict_set = {}
+        self.check = 0
 
+        for var in self.variables:
+            self.old_conflicts = []
+            self.conflict_set[var] = []
+        
 
 def dom_wdeg(csp, assignment, var): 
     weight = 1
@@ -14,7 +22,6 @@ def dom_wdeg(csp, assignment, var):
 
     return len(csp.curr_domains[var]) / weight    
 
-    
 def wdeg(assignment, csp):
     if csp.curr_domains is None:
         return first_unassigned_variable(assignment, csp)
@@ -29,8 +36,6 @@ def wdeg(assignment, csp):
                 min_var = v
 
     return min_var
-    
-    
 
 def revise2(csp, Xi, Xj, removals, checks=0):
     revised = False
@@ -39,6 +44,7 @@ def revise2(csp, Xi, Xj, removals, checks=0):
         # if all(not csp.constraints(Xi, x, Xj, y) for y in csp.curr_domains[Xj]):
         conflict = True
         for y in csp.curr_domains[Xj]:
+            csp.check += 1
             if csp.constraints(Xi, x, Xj, y, csp.con_dict):
                 conflict = False
             checks += 1
@@ -48,7 +54,7 @@ def revise2(csp, Xi, Xj, removals, checks=0):
             csp.prune(Xi, x, removals)
             revised = True
 
-###################################
+    #Domain wipeout
     if len(csp.curr_domains[Xi]) == 0:
         constraint = csp.con_dict[Xi]
         for i in range(len(constraint)):
@@ -62,9 +68,10 @@ def revise2(csp, Xi, Xj, removals, checks=0):
             int(constraint[i][0][0]) == int(Xj) and int(constraint[i][0][1]) == int(Xi):
                 constraint[i][1] += 1
 
-
     return revised
-def AC3_2(csp, queue=None, removals=None, arc_heuristic=dom_j_up):
+
+
+def AC3_2(csp, queue = None, removals = None, arc_heuristic = dom_j_up):
     """[Figure 6.3]"""
     if queue is None:
         queue = {(Xi, Xk) for Xi in csp.variables for Xk in csp.neighbors[Xi]}
@@ -81,9 +88,11 @@ def AC3_2(csp, queue=None, removals=None, arc_heuristic=dom_j_up):
                 if Xk != Xj:
                     queue.add((Xk, Xi))
     return True  # CSP is satisfiable
-def mac2(csp, var, value, assignment, removals, constraint_propagation=AC3_2):
+
+def mac2(csp, var, value, assignment, removals, constraint_propagation = AC3_2):
     """Maintain arc consistency."""
     return constraint_propagation(csp, {(X, var) for X in csp.neighbors[var]}, removals)
+
 
 def forward_checking2(csp, var, value, assignment, removals):
     """Prune neighbor values inconsistent with var=value."""
@@ -92,15 +101,11 @@ def forward_checking2(csp, var, value, assignment, removals):
     for B in csp.neighbors[var]:
         if B not in assignment:
             for b in csp.curr_domains[B][:]:
+                csp.check += 1
                 if not csp.constraints(var, value, B, b, csp.con_dict):
                     csp.prune(B, b, removals)
                     csp.conflict_set[B].append(var)
 
-
-
-###########
-###########
-###########
             if len(csp.curr_domains[B]) == 0:
                 constraint = csp.con_dict[var]
                 for i in range(len(constraint)):
@@ -108,16 +113,8 @@ def forward_checking2(csp, var, value, assignment, removals):
                     int(constraint[i][0][0]) == int(B) and int(constraint[i][0][1]) == int(var):
                         constraint[i][1] += 1
                 break
-                        
-            # if len(csp.curr_domains[B]) == 0:
-            #     constraint = csp.con_dict[B]
-            #     for i in range(len(constraint)):
-            #         if int(constraint[i][0][0]) == int(var) and int(constraint[i][0][1]) == int(B) or \
-            #         int(constraint[i][0][0]) == int(B) and int(constraint[i][0][1]) == int(var):
-            #             constraint[i][1] += 1
-
+                    
             if not csp.curr_domains[B]:
-                csp.conflict_set[var] = csp.conflict_set[var].union(csp.conflict_set[B])
                 return False
     return True
 
@@ -170,7 +167,6 @@ def cbj_search(csp, select_unassigned_variable = wdeg,
                 csp.unassign(var, assignment)
                 csp.conflict_set = csp.old_conflicts
 
-
             csp.old_cs = csp.conflict_set[var]
             return None
 
@@ -178,10 +174,9 @@ def cbj_search(csp, select_unassigned_variable = wdeg,
         assert result is None or csp.goal_test(result)
         return result
 
-    
-   
-def backtracking_search2(csp, select_unassigned_variable=first_unassigned_variable,
-                        order_domain_values=unordered_domain_values, inference=forward_checking2):
+
+def backtracking_search2(csp, select_unassigned_variable = first_unassigned_variable,
+                        order_domain_values = unordered_domain_values, inference = forward_checking2):
 
         def backtrack(assignment):
             if len(assignment) == len(csp.variables):

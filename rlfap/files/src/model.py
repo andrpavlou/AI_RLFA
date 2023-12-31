@@ -1,7 +1,6 @@
 from newcsp import *
 import linecache 
-import sys
-import time
+
 
 class Model():
 
@@ -121,52 +120,4 @@ class Model():
         search_algo["bt"] = backtracking_search2
         search_algo["cbj"] = cbj_search
         return var_order_match, algorithm_match, search_algo
-    
-
-
-if __name__== "__main__": 
-    inference = sys.argv[1]
-    search_method = sys.argv[2]
-    var_ordering = sys.argv[3]
-    instance = sys.argv[4]
-    
-
-    vo_map, inf_map, search_map = Model.unpack_arguements(inference, search_method, var_ordering)
-
-    if inference not in inf_map.keys():
-        print("\n---Wrong Inference, try again. Run example: python3 model.py fc bt wdeg 2-f25 ---\n\n\n\n")
-        exit()
-    if search_method not in search_map.keys():
-        print("\n---Wrong search algorithm, try again. Run example: python3 model.py fc bt wdeg 2-f25 ---\n\n\n\n")
-        exit()
-
-    if var_ordering not in vo_map.keys():
-        print("\n---Wrong heuristic, try again. Run example: python3 model.py fc bt wdeg 2-f25 ---\n\n\n\n")
-        exit()
-
-
-    print("---------Running---------")
-    print("Search Algorithm:", search_method.upper())
-    print("select unassigned variable:", var_ordering.upper())
-    print("order Domain Values: LCV")
-    print("inference:", inference.upper())
-    print("--------------------------")
-
-    variables, domains, neighbors, con_dict = Model.info_ret(instance)
-    problem = NewCSP(variables, domains, neighbors, Model.constraint_check, con_dict)
-    start = time.time()
-    
-    result = search_map[search_method](problem, select_unassigned_variable = vo_map[var_ordering], 
-                        order_domain_values = lcv, inference = inf_map[inference])
-    end = time.time()
-
-    print("\n\n---------Results---------")
-    if result is None:
-        print("The instance does not have a solution.")
-    else:
-        print("Result:", result)
-
-    print("Assignments:", problem.nassigns)
-    print("Time elapsed: ", (end - start))
-    
     
