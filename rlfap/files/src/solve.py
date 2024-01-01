@@ -86,16 +86,14 @@ if __name__== "__main__":
         if result is None:
             print("The instance does not have a solution.")
         else:
-            print("Result: ", result)
+            print("Result:", result)
 
-        print("Assignments: ", problem.nassigns)
-        print("Checks: ", problem.check)
-        print("Time elapsed: ", (end - start))
-    
+        print("Assignments:", problem.nassigns)
+        print("Checks:", problem.check)
+        print("Time elapsed:", (end - start))    
         exit()
 
 
-        
     start = time.time()
     
     result = search_map[search_method](problem, select_unassigned_variable = vo_map[var_ordering], 
@@ -107,10 +105,10 @@ if __name__== "__main__":
     if result is None:
         print("The instance does not have a solution.")
     else:
-        print("Result: ", result)
+        print("Result:", result)
 
-    print("Assignments: ", problem.nassigns)
-    print("Checks: ", problem.check)
-    print("Time elapsed: ", (end - start))
+    print("Assignments:", problem.nassigns)
+    print("Checks:", problem.check)
+    print("Time elapsed:", (end - start))
     
     
