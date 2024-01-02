@@ -4,16 +4,13 @@ class NewCSP(CSP):
     def __init__(self, variables, domains, neighbors, constraints, constraint_dict):
         super().__init__(variables, domains, neighbors, constraints, constraint_dict)
         self.con_dict = constraint_dict
-        self.old_cs = []
-        self.conflict_set = {}
-        self.past_fc = {}
-        self.last_var = None
-        self.no_good = set()
         self.check = 0
+        self.last_var = None
 
-        for var in self.variables:
-            self.past_fc[var] = set()
-            self.conflict_set[var] = set()
+        self.no_good = set()
+        self.past_fc = { var : set() for var in self.variables }
+        self.conflict_set = { var : set() for var in self.variables }
+
         
 
 def dom_wdeg(csp, assignment, var): 
@@ -137,7 +134,6 @@ def cbj_search(csp, select_unassigned_variable = wdeg,
                 return assignment
             
             var = select_unassigned_variable(assignment, csp)
-
             for value in order_domain_values(var, assignment, csp):
                 csp.assign(var, value, assignment)
                 removals = csp.suppose(var, value)
