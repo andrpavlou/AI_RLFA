@@ -5,13 +5,15 @@ class NewCSP(CSP):
         super().__init__(variables, domains, neighbors, constraints, constraint_dict)
         self.con_dict = constraint_dict
         self.old_cs = []
-        self.old_conflicts = {}
         self.conflict_set = {}
+        self.past_fc = {}
+        self.last_var = None
+        self.no_good = set()
         self.check = 0
 
         for var in self.variables:
-            self.old_conflicts = []
-            self.conflict_set[var] = []
+            self.past_fc[var] = set()
+            self.conflict_set[var] = set()
         
 
 def dom_wdeg(csp, assignment, var): 
@@ -97,14 +99,13 @@ def mac2(csp, var, value, assignment, removals, constraint_propagation = AC3_2):
 def forward_checking2(csp, var, value, assignment, removals):
     """Prune neighbor values inconsistent with var=value."""
     csp.support_pruning()
-    csp.fail = None
     for B in csp.neighbors[var]:
         if B not in assignment:
             for b in csp.curr_domains[B][:]:
                 csp.check += 1
                 if not csp.constraints(var, value, B, b, csp.con_dict):
                     csp.prune(B, b, removals)
-                    csp.conflict_set[B].append(var)
+                    csp.past_fc[B].add(var)
 
             if len(csp.curr_domains[B]) == 0:
                 constraint = csp.con_dict[var]
@@ -112,9 +113,9 @@ def forward_checking2(csp, var, value, assignment, removals):
                     if int(constraint[i][0][0]) == int(var) and int(constraint[i][0][1]) == int(B) or \
                     int(constraint[i][0][0]) == int(B) and int(constraint[i][0][1]) == int(var):
                         constraint[i][1] += 1
-                break
                     
             if not csp.curr_domains[B]:
+                csp.last_var = B
                 return False
     return True
 
@@ -122,52 +123,47 @@ def forward_checking2(csp, var, value, assignment, removals):
 def cbj_search(csp, select_unassigned_variable = wdeg,
                 order_domain_values = lcv, inference = forward_checking2):
 
-        def merge(var, cs):
-            for conflicts in cs:
-                if conflicts not in csp.conflict_set[var]:
-                    csp.conflict_set[var].append(conflicts)
-            
-            if var in csp.conflict_set[var]:
-                csp.conflict_set[var].remove(var)
-
-            return csp.conflict_set[var]
-
         def cbj(assignment):
+            print(csp.nassigns)
 
-            #solution found 
             if len(assignment) == len(csp.variables):
                 return assignment
             
             var = select_unassigned_variable(assignment, csp)
-            for value in order_domain_values(var, assignment, csp): 
+            for value in order_domain_values(var, assignment, csp):
                 csp.assign(var, value, assignment)
                 removals = csp.suppose(var, value)
 
                 check = inference(csp, var, value, assignment, removals)
-                csp.old_conflicts = csp.conflict_set
                 if check:
                     result = cbj(assignment)
 
                     if result is not None:
                         return result
-                    
-                    #Not a result hence, go back to the deepest variable
-                    if var not in csp.old_cs:
+
+                    if var not in csp.no_good:
                         csp.restore(removals)
                         csp.unassign(var, assignment)
-                        csp.conflict_set = csp.old_conflicts
                         return None
+
+                    csp.conflict_set[var] = csp.conflict_set[var].union(csp.no_good)
+                    csp.conflict_set[var] - {var}
+                    for variables in csp.past_fc[var]:
+                        csp.conflict_set[variables] = set()
                 
-                #Domain wipeout
+                    
+                #FUTURE DOMAIN WIPEOUT
                 if not check:
-                    csp.conflict_set[var] = merge(var, csp.old_cs)
-                
-                #it means the value was not assigned, so re move it
+                    csp.conflict_set[var] = csp.conflict_set[var].union(csp.past_fc[csp.last_var])
+
                 csp.restore(removals)
                 csp.unassign(var, assignment)
-                csp.conflict_set = csp.old_conflicts
 
-            csp.old_cs = csp.conflict_set[var]
+            #CURRENT DOMAIN WIPEOUT
+            csp.no_good = csp.past_fc[var].union(csp.conflict_set[var])
+
+
+
             return None
 
         result = cbj({})
