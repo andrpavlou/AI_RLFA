@@ -33,7 +33,7 @@ def wdeg(assignment, csp):
     for v in csp.variables:
         if v not in assignment:
             curr_value = dom_wdeg(csp, assignment, v)
-            if min_value >= curr_value:
+            if min_value > curr_value:
                 min_value = curr_value
                 min_var = v
 
@@ -113,6 +113,13 @@ def forward_checking2(csp, var, value, assignment, removals):
                     if int(constraint[i][0][0]) == int(var) and int(constraint[i][0][1]) == int(B) or \
                     int(constraint[i][0][0]) == int(B) and int(constraint[i][0][1]) == int(var):
                         constraint[i][1] += 1
+
+            if len(csp.curr_domains[B]) == 0:
+                constraint = csp.con_dict[B]
+                for i in range(len(constraint)):
+                    if int(constraint[i][0][0]) == int(var) and int(constraint[i][0][1]) == int(B) or \
+                    int(constraint[i][0][0]) == int(B) and int(constraint[i][0][1]) == int(var):
+                        constraint[i][1] += 1
                     
             if not csp.curr_domains[B]:
                 csp.last_var = B
@@ -130,6 +137,7 @@ def cbj_search(csp, select_unassigned_variable = wdeg,
                 return assignment
             
             var = select_unassigned_variable(assignment, csp)
+
             for value in order_domain_values(var, assignment, csp):
                 csp.assign(var, value, assignment)
                 removals = csp.suppose(var, value)
@@ -150,7 +158,6 @@ def cbj_search(csp, select_unassigned_variable = wdeg,
                     csp.conflict_set[var] - {var}
                     for variables in csp.past_fc[var]:
                         csp.conflict_set[variables] = set()
-                
                     
                 #FUTURE DOMAIN WIPEOUT
                 if not check:
@@ -161,8 +168,6 @@ def cbj_search(csp, select_unassigned_variable = wdeg,
 
             #CURRENT DOMAIN WIPEOUT
             csp.no_good = csp.past_fc[var].union(csp.conflict_set[var])
-
-
 
             return None
 
@@ -175,6 +180,7 @@ def backtracking_search2(csp, select_unassigned_variable = first_unassigned_vari
                         order_domain_values = unordered_domain_values, inference = forward_checking2):
 
         def backtrack(assignment):
+            print(csp.nassigns)
             if len(assignment) == len(csp.variables):
                 return assignment
             var = select_unassigned_variable(assignment, csp)
