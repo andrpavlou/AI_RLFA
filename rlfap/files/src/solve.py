@@ -2,6 +2,7 @@ from model import *
 import sys
 import time
 
+
 """
 newcsp.py: Inherits csp class and implements:
     1)Dom/Wdeg Variable Ordering:
@@ -42,6 +43,9 @@ Inference: FC/MAC/MIN CONFLICTS
 
 
 How to run examples: 
+python3 solve.py inference search_algo heuristic instance 
+(For min_conflicts-> inference + heuristic = None)
+
 Example 1: python3 solve.py mac bt mrv 2-f25
 Example 2: python3 solve.py fc cbj wdeg 3-f10
 Example 3: python3 solve.py - min_conflicts - 2-f24
@@ -50,40 +54,27 @@ Example 3: python3 solve.py - min_conflicts - 2-f24
 
 if __name__== "__main__": 
     run, inference, search_method, var_ordering, instance = sys.argv
-    vo_map, inf_map, search_map = Model.unpack_arguements(inference, search_method, var_ordering)
+    vo_map, inf_map, search_map = Model.map_arguements()
+    Model.wrong_input(vo_map, inf_map, search_map)
 
 
-    if inference not in inf_map.keys() and search_method != "min_conflicts":
-        print("\n---Wrong Inference, try again. Run example: python3 solve.py fc bt wdeg 2-f25---\n\n\n\n")
-        exit()
-
-    if search_method not in search_map.keys():
-        print("\n---Wrong search algorithm, try again. Run example: python3 solve.py fc bt wdeg 2-f25---\n\n\n\n")
-        exit()
-
-    if var_ordering not in vo_map.keys() and search_method != "min_conflicts":
-        print("\n---Wrong heuristic, try again. Run example: python3 solve.py fc bt wdeg 2-f25---\n\n\n\n")
-        exit()
-
-
-    print("---------Running---------")
+    print("|-----------------Running-----------------|")
     print("Search Algorithm:", search_method.upper())
     print("Select Unassigned Variable:", var_ordering.upper())
     print("Order Domain Values: LCV")
     print("Inference:", inference.upper())
     print("Instance: ", instance)
-    print("--------------------------")
+    print("|-----------------------------------------|")
 
 
     variables, domains, neighbors, con_dict = Model.info_ret(instance)
     problem = NewCSP(variables, domains, neighbors, Model.constraint_check, con_dict)
     if search_method == "min_conflicts":
         start = time.time()
-    
         result = search_map[search_method](problem, 10000)
         end = time.time()
 
-        print("\n\n---------Results---------")
+        print("\n\n|------------------Result-----------------|")
         if result is None:
             print("The instance does not have a solution.")
         else:
@@ -92,6 +83,7 @@ if __name__== "__main__":
         print("Assignments:", problem.nassigns)
         print("Checks:", problem.check)
         print("Time elapsed:", (end - start))    
+        print("\n|--------------------End------------------|")
         exit()
 
 
@@ -102,7 +94,7 @@ if __name__== "__main__":
     end = time.time()
 
 
-    print("\n\n---------Results---------")
+    print("\n\n|------------------Result-----------------|")
     if result is None:
         print("The instance does not have a solution.")
     else:
@@ -111,5 +103,7 @@ if __name__== "__main__":
     print("Assignments:", problem.nassigns)
     print("Checks:", problem.check)
     print("Time elapsed:", (end - start))
+    print("\n|--------------------End------------------|")
+
     
     
