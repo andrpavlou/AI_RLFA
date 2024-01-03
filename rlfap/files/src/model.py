@@ -21,11 +21,7 @@ class Model():
         return final_var, final_ctr, final_dom
 
     
-
-    def info_ret(prefix):
-        final_var, final_ctr, final_dom = Model.file_path(prefix)
-        
-
+    def var_dom_ctr(final_var, final_ctr, final_dom):
         vartxt = open(final_var, 'r')
         ctrtxt = open(final_ctr, 'r')
 
@@ -53,7 +49,6 @@ class Model():
             for ctr_lines in ctrtxt.readlines()[1:]:
                 ctr_lines = ctr_lines.split()
 
-
                 var_check = int(ctr_lines[0])
                 curr_neig = int(ctr_lines[1])
 
@@ -67,10 +62,15 @@ class Model():
             n_dict[int(var[-1])] = list(neighbors)
             neighbors.clear()
             ctrtxt.seek(0)
+        return int_var, dom_dict, n_dict
 
+
+    def constraints_ret(final_ctr, int_var):
+        ctrtxt = open(final_ctr, 'r')
         con_dict = {}
-        con_list = []
+
         for var1 in int_var:
+            con_list = []
             for ctr_lines in ctrtxt.readlines()[1:]:
                 ctr_lines = ctr_lines.split()   
 
@@ -79,10 +79,16 @@ class Model():
             
             con_dict[var1] = list(con_list) #For each variable it is stored, its constraints.
             ctrtxt.seek(0) 
-            con_list.clear()
-
-        vartxt.close()
+        
         ctrtxt.close()
+        return con_dict
+        
+
+    def info_ret(prefix):
+        final_var, final_ctr, final_dom = Model.file_path(prefix)
+        int_var, dom_dict, n_dict = Model.var_dom_ctr(final_var, final_ctr, final_dom)
+        con_dict = Model.constraints_ret(final_ctr, int_var)
+
         return int_var, dom_dict, n_dict, con_dict
     
     """
@@ -92,9 +98,8 @@ class Model():
     """
 
     def constraint_check(A, a, B, b, con_dict):
-        constraint = con_dict[A]
         sub = abs(a - b)
-
+        constraint = con_dict[A]
 
         for con in constraint:
             first_var = int(con[0][0]) #First variable of the constraint.
@@ -112,7 +117,7 @@ class Model():
                     
                 return False
                 
-        #In A and B are not neighbors.
+        #In case A and B are not neighbors.
         print("Does not exit!")            
         return False
 
