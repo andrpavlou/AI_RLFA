@@ -59,11 +59,11 @@ if __name__== "__main__":
 
 
     print("|-----------------Running-----------------|")
-    print("Search Algorithm:", search_method.upper())
-    print("Select Unassigned Variable:", var_ordering.upper())
-    print("Order Domain Values: LCV")
-    print("Inference:", inference.upper())
-    print("Instance: ", instance)
+    print("     Search Algorithm:", search_method.upper())
+    print("     Select Unassigned Variable:", var_ordering.upper())
+    print("     Order Domain Values: LCV")
+    print("     Inference:", inference.upper())
+    print("     Instance: ", instance)
     print("|-----------------------------------------|")
 
 
@@ -74,16 +74,16 @@ if __name__== "__main__":
         result = search_map[search_method](problem, 10000)
         end = time.time()
 
-        print("\n\n|------------------Result-----------------|")
         if result is None:
-            print("The instance does not have a solution.")
+            print("     The instance does not have a solution.")
         else:
-            print("Result:", result)
+            print("     Result:", result)
 
-        print("Assignments:", problem.nassigns)
-        print("Checks:", problem.check)
-        print("Time elapsed:", (end - start))    
-        print("\n|--------------------End------------------|")
+        print("\n\n|------------------Result-----------------|")
+        print("     Assignments:", problem.nassigns)
+        print("     Checks:", problem.check)
+        print("     Time elapsed:", (end - start))    
+        print("|--------------------End------------------|")
         exit()
 
 
@@ -96,14 +96,14 @@ if __name__== "__main__":
 
     print("\n\n|------------------Result-----------------|")
     if result is None:
-        print("The instance does not have a solution.")
+        print("     The instance does not have a solution.")
     else:
-        print("Result:", result)
+        print("     Result:", result)
 
-    print("Assignments:", problem.nassigns)
-    print("Checks:", problem.check)
-    print("Time elapsed:", (end - start))
-    print("\n|--------------------End------------------|")
+    print("     Assignments:", problem.nassigns)
+    print("     Checks:", problem.check)
+    print("     Time elapsed:", (end - start))
+    print("|--------------------End------------------|")
 
     
     

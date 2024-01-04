@@ -41,7 +41,8 @@ class NewCSP(CSP):
             if v not in assignment:
                 curr_value = NewCSP.dom_wdeg(csp, assignment, v)
             if min_value > curr_value and v not in assignment:
-                min_value, min_var = curr_value, v
+                min_value, min_var, curr_value = curr_value, v, float('inf')
+
         
         return min_var
 
@@ -119,7 +120,6 @@ class NewCSP(CSP):
                     order_domain_values = lcv, inference = forward_checking2):
 
             def cbj(assignment):
-                print(csp.nassigns)
                 if len(assignment) == len(csp.variables):
                     return assignment
                 
