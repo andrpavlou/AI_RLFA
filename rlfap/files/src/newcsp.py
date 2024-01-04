@@ -14,30 +14,35 @@ class NewCSP(CSP):
         self.weight = {}
         for values, keys in neighbors.items():
             for key in keys:
-                self.weight[(values, key)] = 1            
+                self.weight[(values, key)] = 1    
         
 
+    def find_dom(csp, var):
+        """Return all values for var that aren't currently ruled out."""
+        if not csp.curr_domains: 
+            return csp.domains[var]
+        return csp.curr_domains[var]
+    
     def dom_wdeg(csp, assignment, var): 
-        weight = 1
+        weight = 0
+        
+        #Finds the ratio of the current value.
         for neighbor in csp.neighbors[var]:
-            if neighbor not in assignment:
-                weight += csp.weight[(var, neighbor)]
+            if neighbor not in assignment: weight += csp.weight[(var, neighbor)]
 
-        return len(csp.curr_domains[var]) / weight    
+        dom_len = len(NewCSP.find_dom(csp, var))
+        return dom_len / (weight or 1)
 
     def wdeg(assignment, csp):
-        if csp.curr_domains is None:
-            return first_unassigned_variable(assignment, csp)
-        
-        min_value = float('inf')
-        min_var = 0
+        min_value, curr_value, min_var = float('inf'), -1, None
+
+        #Finds the variable with the smallest ratio using function (dom_wdeg).
         for v in csp.variables:
             if v not in assignment:
                 curr_value = NewCSP.dom_wdeg(csp, assignment, v)
-                if min_value > curr_value:
-                    min_value = curr_value
-                    min_var = v
-
+            if min_value > curr_value and v not in assignment:
+                min_value, min_var = curr_value, v
+        
         return min_var
 
     def revise2(csp, Xi, Xj, removals, checks=0):
@@ -114,8 +119,7 @@ class NewCSP(CSP):
                     order_domain_values = lcv, inference = forward_checking2):
 
             def cbj(assignment):
-                # print(csp.nassigns)
-
+                print(csp.nassigns)
                 if len(assignment) == len(csp.variables):
                     return assignment
                 
@@ -137,7 +141,7 @@ class NewCSP(CSP):
                         #all the values in its domain.
                         if result is not None:
                             return result
-                        
+
                         #If result was not found, it must backtrack to the variable in the
                         #csp.no_good set which might have caused problems.
                         #(The variable that it is searching is the deepest).
@@ -152,7 +156,7 @@ class NewCSP(CSP):
                         #must be merged with the conflict set of the current variable,
                         #so there will not be any lost information of conflicts.
                         csp.conflict_set[var] = csp.conflict_set[var].union(csp.no_good)
-                        csp.conflict_set[var] - {var}
+                        csp.conflict_set[var] -= {var}
 
                         #Restore conflict sets before the assignment of the previously,
                         #last assigned variable.
@@ -168,7 +172,6 @@ class NewCSP(CSP):
 
                 #Current variable's domain wipe out -> backtrack to the variable in no_good set (deepest).
                 csp.no_good = csp.past_fc[var].union(csp.conflict_set[var])
-
                 return None
 
             result = cbj({})
