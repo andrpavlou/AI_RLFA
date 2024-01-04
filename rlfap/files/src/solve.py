@@ -90,7 +90,7 @@ if __name__== "__main__":
     start = time.time()
     
     result = search_map[search_method](problem, select_unassigned_variable = vo_map[var_ordering], 
-                        order_domain_values = unordered_domain_values, inference = inf_map[inference])
+                        order_domain_values = lcv, inference = inf_map[inference])
     end = time.time()
 
 
