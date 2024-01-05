@@ -162,6 +162,7 @@ class NewCSP(CSP):
                         for variables in csp.past_fc[var]:
                             csp.conflict_set[variables] = set()
                     
+                    
                     #Wipe of future unassigned variable's domain. -> merge CS(var)+PFC(last_var)
                     if not check:
                         csp.conflict_set[var] = csp.conflict_set[var].union(csp.past_fc[csp.last_var])
