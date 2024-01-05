@@ -42,7 +42,6 @@ class NewCSP(CSP):
                 curr_value = NewCSP.dom_wdeg(csp, assignment, v)
             if min_value > curr_value and v not in assignment:
                 min_value, min_var, curr_value = curr_value, v, float('inf')
-
         
         return min_var
 
