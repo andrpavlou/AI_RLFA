@@ -3,6 +3,7 @@ import linecache
 import sys
 
 class Model():
+    #Function to find the final path of the instance that the information is taken from.
     def file_path(prefix):
         lastfix = ".txt"
         
@@ -20,7 +21,8 @@ class Model():
         final_dom += lastfix
         return final_var, final_ctr, final_dom
 
-    
+    #Extracts all the useful information needed from the .txt files
+    #and stores it, in the form that was asked.
     def var_dom_ctr(final_var, final_ctr, final_dom):
         vartxt = open(final_var, 'r')
         ctrtxt = open(final_ctr, 'r')
@@ -30,7 +32,7 @@ class Model():
         dom_dict = {}
         neighbors = []
         
-        #Retrieve variables
+        #Retrieve variables.
         for v_lines in vartxt.readlines()[1:]:
             var.append(v_lines.split()[0]) #Stores variables. 
             int_var = [eval(i) for i in var] #Transforms string to int.
@@ -125,17 +127,28 @@ class Model():
     def map_arguements():
         var_order_match = {}
         var_order_match["mrv"] = mrv
+        var_order_match["MRV"] = mrv
+
         var_order_match["wdeg"] = NewCSP.wdeg
+        var_order_match["WDEG"] = NewCSP.wdeg
 
         algorithm_match = {}
         algorithm_match["fc"] = NewCSP.forward_checking2
+        algorithm_match["FC"] = NewCSP.forward_checking2
+
         algorithm_match["mac"] = NewCSP.mac2
+        algorithm_match["MAC"] = NewCSP.mac2
 
 
         search_algo = {}
         search_algo["bt"] = NewCSP.backtracking_search2
+        search_algo["BT"] = NewCSP.backtracking_search2
+
         search_algo["cbj"] = NewCSP.cbj_search
+        search_algo["CBJ"] = NewCSP.cbj_search
+
         search_algo["min_conflicts"] = min_conflicts
+        search_algo["MIN_CONFLICTS"] = min_conflicts
         return var_order_match, algorithm_match, search_algo
     
     def wrong_input(vo_map, inf_map, search_map):

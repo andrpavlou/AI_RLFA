@@ -42,13 +42,16 @@ Variable Ordering: DOM_WDEG/MRV
 Inference: FC/MAC/MIN CONFLICTS
 
 
-How to run examples: 
-python3 solve.py inference search_algo heuristic instance 
+How to run examples:
+
+Prototype: python3 solve.py inference search_algo heuristic instance 
 (For min_conflicts-> inference + heuristic = None)
 
 Example 1: python3 solve.py mac bt mrv 2-f25
-Example 2: python3 solve.py fc cbj wdeg 3-f10
+Example 2: python3 solve.py fc cbj wdeg 7-w1-f4
 Example 3: python3 solve.py - min_conflicts - 2-f24
+
+(Available to run with caps)
 """
 
 

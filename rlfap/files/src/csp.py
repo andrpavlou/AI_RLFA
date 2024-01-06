@@ -456,7 +456,6 @@ def min_conflicts(csp, max_steps=100000):
 def min_conflicts_value(csp, var, current):
     """Return the value that will give var the least number of conflicts.
     If there is a tie, choose at random."""
-    print(csp.nassigns)
     return argmin_random_tie(csp.domains[var], key=lambda val: csp.nconflicts(var, val, current))
 
 

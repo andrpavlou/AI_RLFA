@@ -18,7 +18,6 @@ class NewCSP(CSP):
         
 
     def find_dom(csp, var):
-        """Return all values for var that aren't currently ruled out."""
         if not csp.curr_domains: 
             return csp.domains[var]
         return csp.curr_domains[var]
@@ -26,7 +25,7 @@ class NewCSP(CSP):
     def dom_wdeg(csp, assignment, var): 
         weight = 0
         
-        #Finds the ratio of the current value.
+        #Finds the needed ratio of the current value.
         for neighbor in csp.neighbors[var]:
             if neighbor not in assignment: weight += csp.weight[(var, neighbor)]
 
@@ -183,7 +182,6 @@ class NewCSP(CSP):
                             order_domain_values = unordered_domain_values, inference = forward_checking2):
 
             def backtrack(assignment):
-                print(csp.nassigns)
                 if len(assignment) == len(csp.variables):
                     return assignment
                 var = select_unassigned_variable(assignment, csp)
