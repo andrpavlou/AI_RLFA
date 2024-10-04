@@ -1,5 +1,6 @@
 """CSP (Constraint Satisfaction Problems) problems and solvers. (Chapter 6)"""
 
+
 import itertools
 import random
 import re
